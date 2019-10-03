@@ -1,0 +1,28 @@
+/*-------------------
+style elements
+-------------------*/
+
+
+/*-------------------
+style classes
+-------------------*/
+.jumbotron {
+    color: white;
+    background-color: black;
+}
+
+.card-header {
+    background-color: skyblue;
+}
+
+/*-------------------
+style ids
+-------------------*/
+#train-table th, td {
+    display: inline-block;
+    width: 20%;
+}
+
+#add-train-button {
+    background-color: skyblue;
+}
