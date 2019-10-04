@@ -32,18 +32,59 @@ var config = {
     var destination = $("#destination-input").val().trim();
     var frequency = $("#frequency-input").val().trim();
     var firstTrainTime = $("#first-train-time-input").val().trim();
+    // split time into hours and minutes
+    var sepTime = firstTrainTime.split(":");
+    console.log("sepTime " + sepTime);
+    // create seconds to add to unixDate
+    var addSeconds = sepTime[0]*3600 + sepTime[1]*60;
+    console.log("addSeconds " + addSeconds);
+    // get current date
+    var unixDate = moment().set('hours', 0).set('minutes', 0).set('seconds', 0).unix();
+    var unixRefTime = unixDate + addSeconds;
+    console.log("unixRefTime " + unixRefTime);
+    
+    // check that values taken in
+    console.log("v1 " + trainName);
+    console.log("v2 " + destination);
+    console.log("v3 " +  frequency);
+    console.log("v4 " + firstTrainTime);
+    
+    //finds next arrival time after current date/time
+    function makePos(uRef, freq) {
+      var currentUnixTime = moment().seconds(0).unix();
+      console.log("uRef " + uRef)
+      console.log("then i'm here");
+      console.log("currentUnixTime " + currentUnixTime);
+      console.log(" this diff " + (uRef - currentUnixTime));
+      while (uRef - currentUnixTime <= 0) { 
+          uRef = uRef + freq*60; //moment(time).add(1, "d").unix();
+      console.log("subtract " + (uRef - unixDate));
+      console.log("time-pos " + uRef + " freq " + freq);
+      }
+      // document.getElementById("target-new").innerHTML = uRef;
+      return uRef;
+    }
+
+
 
     // create local object to hold input data
     var newTrain = {
       name: trainName,
       dest: destination,
       freq: frequency,
-      firstTrTime: firstTrainTime
-      // futureTrTime: makePos(unixRefTime, frequency)
+      firstTrTime: firstTrainTime,
+      futureTrTime: makePos(unixRefTime, frequency)
     };
 
     // upload data to firebase
     database.ref().push(newTrain);
+
+    // check that data was stored using console.log
+    console.log("a " + newTrain.name);
+    console.log("b " + newTrain.dest);
+    console.log("c " +  newTrain.freq);
+    console.log("d " + newTrain.firstTrTime);
+    console.log("e " + newTrain.futureTrTime);
 
     // alert user that information was added
     alert("Train and Schedule Successfully Added");
@@ -67,26 +108,15 @@ var config = {
       var trDest = childSnapshot.val().dest;
       var trFreq = childSnapshot.val().freq;
       var trFirstT = childSnapshot.val().firstTrTime;
-
-      // compare firstTrTime to current date/time
-      // first split firstTrTime into minutes and hours
-      var sepTime = trFirstT.split(":");
-      console.log("sepTime " + sepTime);
-      // create seconds to add to unixDate
-      var addSeconds = sepTime[0]*3600 + sepTime[1]*60;
-      console.log("addSeconds " + addSeconds);
-      // get current date at midnight
-      var unixDate = moment().set('hours', 0).set('minutes', 0).set('seconds', 0).unix();
-      // combine current date and train start time
-      var unixRefTime = unixDate + addSeconds;
-      console.log("unixRefTime " + unixRefTime);
-      // compare first train time to current time
-      // if start time in past add frequency until next time
-      // is in future
-      var trFutureT = makePos(unixRefTime, trFreq);
+      var trFutureT = childSnapshot.val().futureTrTime;
+      // change to ms format
+      // var trFutureT = childSnapshot.val().futureTrTime*1000;
+      // shows trFutureT in hour minute am/pm format
+      // var minAway = moment(trFutureT).format("h:mm a");
+      // calculate difference between trFutureT and now
+      // var minAway = Math.floor(moment().unix() - trFutureT) / 60;
       var minAway = Math.ceil((trFutureT - moment().unix()) / 60);
-      // convert trFutureT into hours and minutes
-      var nextTime = moment(trFutureT*1000).format("ddd h:mm a");
+      // var minAway = moment().unix().diff(trFutureT);
 
 // time manipulation code ends here
 
@@ -95,9 +125,7 @@ var config = {
         $("<td>").text(trName),
         $("<td>").text(trDest),
         $("<td>").text(trFreq),
-        // $("<td>").text(trFirstT),
-        // $("<td>").text(trFutureT),
-        $("<td>").text(nextTime),
+        $("<td>").text(trFirstT),
         // $("<td>").text(trFutureT)
         $("<td>").text(minAway)
         );
@@ -106,16 +134,4 @@ var config = {
         console.log("ready to apppend");
         $("#train-table > tbody").append(newRow);
       
-        //finds next arrival time after current date/time
-        function makePos(uRef, freq) {
-          console.log("uRefIn " + uRef);
-          var currentUnixTime = moment().seconds(0).unix();
-          console.log("currentUnixTime " + currentUnixTime);
-          while (uRef - currentUnixTime <= 0) { 
-              uRef = uRef + freq * 60; //moment(time).add(1, "d").unix();
-          }
-          console.log("uRefOut " + uRef);
-          return uRef;
-        }
-
       });
